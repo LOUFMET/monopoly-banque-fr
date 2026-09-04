@@ -56,9 +56,9 @@ export const AuctionModal: React.FC<AuctionModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-bold text-white flex items-center gap-1.5">
-                Vente aux Enchères
+                Acheter aux Enchères
               </h3>
-              <p className="text-xs text-slate-400">Règle personnalisée de la table</p>
+              <p className="text-xs text-slate-400">Attribution et prix libre d'achat</p>
             </div>
           </div>
           <button

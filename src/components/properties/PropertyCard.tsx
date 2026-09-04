@@ -181,8 +181,8 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
       <div className="p-3.5 space-y-2.5">
         {/* CASE 1: AVAILABLE AT BANK */}
         {isBank && (
-          <div className="space-y-2">
-            {/* Bouton d'Enchère Principal */}
+          <div>
+            {/* Bouton d'Achat aux Enchères */}
             <button
               onClick={() => {
                 triggerHaptic('medium');
@@ -191,24 +191,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
               className="w-full py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition-all bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 active:scale-98 cursor-pointer"
             >
               <Gavel className="w-4 h-4" />
-              {isBanker ? '🔨 Vendre aux enchères (Prix libre)' : '🔨 Acheter aux enchères'}
-            </button>
-
-            {/* Achat direct optionnel au prix officiel */}
-            <button
-              onClick={() => {
-                triggerHaptic('medium');
-                buyPropertyFromBank(property.id);
-              }}
-              disabled={!canAffordBuy}
-              className={`w-full py-1.5 px-2.5 rounded-lg font-medium text-[11px] flex items-center justify-center gap-1 transition-all ${
-                canAffordBuy
-                  ? 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 active:scale-98 cursor-pointer'
-                  : 'bg-slate-950/60 text-slate-600 cursor-not-allowed border border-slate-800'
-              }`}
-            >
-              <Coins className="w-3.5 h-3.5" />
-              Prix standard : {formatMoney(property.price)}
+              Acheter aux enchères
             </button>
 
             <AuctionModal
