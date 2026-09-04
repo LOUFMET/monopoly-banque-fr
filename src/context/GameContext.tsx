@@ -148,6 +148,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else if (savedSession.players.length > 0) {
           setCurrentPlayerId(savedSession.players[0].id);
         }
+
+        // Resynchroniser avec le serveur au réveil (en cas de mise en veille Render)
+        fetch('/api/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session: savedSession }),
+        }).catch(() => {});
       }
     }
   }, []);
