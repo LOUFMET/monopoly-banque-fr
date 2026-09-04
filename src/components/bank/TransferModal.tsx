@@ -128,10 +128,10 @@ export const TransferModal: React.FC<TransferModalProps> = ({
                     }`}
                   >
                     <div
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0"
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black text-white shrink-0 shadow-xs"
                       style={{ backgroundColor: player.color }}
                     >
-                      {player.token}
+                      {player.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="text-xs font-bold truncate">{player.name}</div>

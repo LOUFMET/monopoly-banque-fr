@@ -115,10 +115,10 @@ export const AuctionModal: React.FC<AuctionModalProps> = ({
                       }`}
                     >
                       <div
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-sm shadow-sm"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black text-white shadow-sm"
                         style={{ backgroundColor: p.color }}
                       >
-                        {p.token}
+                        {p.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="text-xs font-bold truncate">{p.name}</div>
@@ -138,10 +138,10 @@ export const AuctionModal: React.FC<AuctionModalProps> = ({
               <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-base"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black text-white"
                     style={{ backgroundColor: winner.color }}
                   >
-                    {winner.token}
+                    {winner.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
                     <div className="text-xs font-bold text-white">{winner.name}</div>

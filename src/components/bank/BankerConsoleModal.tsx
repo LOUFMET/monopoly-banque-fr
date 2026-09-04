@@ -107,7 +107,12 @@ export const BankerConsoleModal: React.FC<BankerConsoleModalProps> = ({ isOpen, 
                         : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
                     }`}
                   >
-                    <span className="text-base">{p.token}</span>
+                    <div
+                      className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black text-white shrink-0 shadow-xs"
+                      style={{ backgroundColor: p.color }}
+                    >
+                      {p.name.charAt(0).toUpperCase()}
+                    </div>
                     <div className="min-w-0">
                       <div className="text-xs font-bold truncate">{p.name}</div>
                       <div className="text-[10px] font-mono text-emerald-400">

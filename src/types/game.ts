@@ -33,7 +33,7 @@ export const PLAYER_COLORS = [
 export interface Player {
   id: string;
   name: string;
-  token: string; // emoji or id
+  token?: string; // optionnel
   color: string; // hex
   balance: number;
   isBanker: boolean;

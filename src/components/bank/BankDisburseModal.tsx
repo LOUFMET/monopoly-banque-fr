@@ -115,10 +115,10 @@ export const BankDisburseModal: React.FC<BankDisburseModalProps> = ({
                     }`}
                   >
                     <div
-                      className="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold shadow-md shrink-0"
+                      className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black text-white shadow-md shrink-0"
                       style={{ backgroundColor: player.color }}
                     >
-                      {player.token}
+                      {player.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="text-xs font-bold truncate">{player.name}</div>

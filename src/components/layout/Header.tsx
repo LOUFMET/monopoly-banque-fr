@@ -77,10 +77,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSettings, onOpenBankerCons
               className="flex items-center gap-2 p-1 pl-2 pr-2.5 rounded-full bg-slate-900 border border-slate-700/80 hover:border-slate-600 transition-all text-left"
             >
               <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-sm ring-1 ring-white/20"
+                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white ring-1 ring-white/20 shadow-sm"
                 style={{ backgroundColor: currentPlayer.color }}
               >
-                {currentPlayer.token}
+                {currentPlayer.name.charAt(0).toUpperCase()}
               </div>
               <div className="hidden sm:block">
                 <div className="flex items-center gap-1">
@@ -129,7 +129,12 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSettings, onOpenBankerCons
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          <span className="text-base">{p.token}</span>
+                          <div
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-white shrink-0 shadow-sm"
+                            style={{ backgroundColor: p.color }}
+                          >
+                            {p.name.charAt(0).toUpperCase()}
+                          </div>
                           <span className="text-xs font-bold truncate max-w-[90px]">
                             {p.name}
                           </span>

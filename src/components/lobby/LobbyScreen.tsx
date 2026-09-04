@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useGame } from '../../context/GameContext';
-import { MONOPOLY_TOKENS, PLAYER_COLORS } from '../../types/game';
+import { PLAYER_COLORS } from '../../types/game';
 import { storageService } from '../../services/storageService';
 import { Landmark, Users, Play, PlusCircle, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 
@@ -10,7 +10,6 @@ export const LobbyScreen: React.FC = () => {
   const [mode, setMode] = useState<'SELECT' | 'CREATE' | 'JOIN'>('SELECT');
   const [name, setName] = useState('');
   const [roomCode, setRoomCode] = useState('');
-  const [selectedToken, setSelectedToken] = useState(MONOPOLY_TOKENS[0].emoji);
   const [selectedColor, setSelectedColor] = useState(PLAYER_COLORS[0].hex);
   const [startingCash, setStartingCash] = useState(1500);
 
@@ -21,7 +20,7 @@ export const LobbyScreen: React.FC = () => {
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createGame(name || 'Banquier', selectedToken, selectedColor, startingCash);
+    createGame(name || 'Banquier', selectedColor, startingCash);
   };
 
   const handleJoinSubmit = async (e: React.FormEvent) => {
@@ -29,7 +28,7 @@ export const LobbyScreen: React.FC = () => {
     if (!roomCode.trim() || isJoining) return;
     setIsJoining(true);
     try {
-      await joinGame(roomCode, name || 'Joueur', selectedToken, selectedColor);
+      await joinGame(roomCode, name || 'Joueur', selectedColor);
     } finally {
       setIsJoining(false);
     }
@@ -41,7 +40,7 @@ export const LobbyScreen: React.FC = () => {
     if (session && session.players.length > 0) {
       setIsJoining(true);
       try {
-        await joinGame(lastRoom, session.players[0].name, session.players[0].token, session.players[0].color);
+        await joinGame(lastRoom, session.players[0].name, session.players[0].color);
       } finally {
         setIsJoining(false);
       }
@@ -186,35 +185,35 @@ export const LobbyScreen: React.FC = () => {
               </div>
             </div>
 
-            {/* Choix du Pion */}
+            {/* Couleur & Identité Visuelle */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                Choisissez votre Pion
-              </label>
-              <div className="grid grid-cols-5 gap-2">
-                {MONOPOLY_TOKENS.map((token) => (
-                  <button
-                    key={token.id}
-                    type="button"
-                    onClick={() => setSelectedToken(token.emoji)}
-                    className={`aspect-square flex items-center justify-center text-2xl rounded-xl border transition-transform ${
-                      selectedToken === token.emoji
-                        ? 'bg-amber-500/20 border-amber-400 scale-105 shadow-md shadow-amber-500/20 ring-2 ring-amber-400/50'
-                        : 'bg-slate-900 border-slate-800 hover:bg-slate-800 text-slate-300'
-                    }`}
-                    title={token.name}
-                  >
-                    {token.emoji}
-                  </button>
-                ))}
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                  Votre Couleur
+                </label>
+                <span className="text-xs text-slate-400 font-medium">
+                  {PLAYER_COLORS.find((c) => c.hex === selectedColor)?.label}
+                </span>
               </div>
-            </div>
 
-            {/* Couleur */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                Couleur de Joueur
-              </label>
+              {/* Aperçu du badge avatar */}
+              <div className="flex items-center gap-3 mb-3 p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center text-lg font-black text-white shadow-md transition-colors shrink-0 ring-2 ring-white/10"
+                  style={{ backgroundColor: selectedColor }}
+                >
+                  {(name.trim() || 'B').charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-white truncate">
+                    {name.trim() || 'Banquier'}
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    Badge d’identification sur vos propriétés et virements
+                  </div>
+                </div>
+              </div>
+
               <div className="flex gap-2 justify-between">
                 {PLAYER_COLORS.map((c) => (
                   <button
@@ -289,35 +288,35 @@ export const LobbyScreen: React.FC = () => {
               />
             </div>
 
-            {/* Choix du Pion */}
+            {/* Couleur & Identité Visuelle */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                Choisissez votre Pion
-              </label>
-              <div className="grid grid-cols-5 gap-2">
-                {MONOPOLY_TOKENS.map((token) => (
-                  <button
-                    key={token.id}
-                    type="button"
-                    onClick={() => setSelectedToken(token.emoji)}
-                    className={`aspect-square flex items-center justify-center text-2xl rounded-xl border transition-transform ${
-                      selectedToken === token.emoji
-                        ? 'bg-blue-500/20 border-blue-400 scale-105 shadow-md shadow-blue-500/20 ring-2 ring-blue-400/50'
-                        : 'bg-slate-900 border-slate-800 hover:bg-slate-800 text-slate-300'
-                    }`}
-                    title={token.name}
-                  >
-                    {token.emoji}
-                  </button>
-                ))}
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                  Votre Couleur
+                </label>
+                <span className="text-xs text-slate-400 font-medium">
+                  {PLAYER_COLORS.find((c) => c.hex === selectedColor)?.label}
+                </span>
               </div>
-            </div>
 
-            {/* Couleur */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                Couleur de Joueur
-              </label>
+              {/* Aperçu du badge avatar */}
+              <div className="flex items-center gap-3 mb-3 p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center text-lg font-black text-white shadow-md transition-colors shrink-0 ring-2 ring-white/10"
+                  style={{ backgroundColor: selectedColor }}
+                >
+                  {(name.trim() || 'J').charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-white truncate">
+                    {name.trim() || 'Joueur'}
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    Badge d’identification sur vos propriétés et virements
+                  </div>
+                </div>
+              </div>
+
               <div className="flex gap-2 justify-between">
                 {PLAYER_COLORS.map((c) => (
                   <button

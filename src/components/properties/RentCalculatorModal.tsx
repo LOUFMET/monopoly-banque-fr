@@ -93,8 +93,14 @@ export const RentCalculatorModal: React.FC<RentCalculatorModalProps> = ({
             <h3 className="text-lg font-black uppercase tracking-tight" style={{ color: property.textColor }}>
               {property.name}
             </h3>
-            <div className="text-xs font-medium opacity-90 mt-0.5" style={{ color: property.textColor }}>
-              Propriétaire : <strong>{owner.name}</strong> {owner.token}
+            <div className="flex items-center justify-center gap-1.5 text-xs font-medium opacity-90 mt-0.5" style={{ color: property.textColor }}>
+              <span>Propriétaire : <strong>{owner.name}</strong></span>
+              <span
+                className="w-4 h-4 rounded-full inline-flex items-center justify-center text-[9px] font-black text-white shadow-xs"
+                style={{ backgroundColor: owner.color }}
+              >
+                {owner.name.charAt(0).toUpperCase()}
+              </span>
             </div>
           </div>
           <button

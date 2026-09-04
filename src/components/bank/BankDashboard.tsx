@@ -53,10 +53,10 @@ export const BankDashboard: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
             <div
-              className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shadow-md ring-2 ring-white/15"
+              className="w-10 h-10 rounded-2xl flex items-center justify-center text-lg font-black text-white shadow-md ring-2 ring-white/15"
               style={{ backgroundColor: currentPlayer.color }}
             >
-              {currentPlayer.token}
+              {currentPlayer.name.charAt(0).toUpperCase()}
             </div>
             <div>
               <div className="flex items-center gap-1.5">

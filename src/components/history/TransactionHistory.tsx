@@ -100,7 +100,12 @@ export const TransactionHistory: React.FC = () => {
                 : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
             }`}
           >
-            <span>{p.token}</span>
+            <div
+              className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black text-white shrink-0 shadow-xs"
+              style={{ backgroundColor: p.color }}
+            >
+              {p.name.charAt(0).toUpperCase()}
+            </div>
             <span>{p.name}</span>
           </button>
         ))}

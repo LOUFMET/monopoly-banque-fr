@@ -125,7 +125,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <span>{p.token}</span>
+                  <div
+                    className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black text-white shrink-0 shadow-xs"
+                    style={{ backgroundColor: p.color }}
+                  >
+                    {p.name.charAt(0).toUpperCase()}
+                  </div>
                   <span className="truncate">{p.name}</span>
                   {p.isBanker && (
                     <span className="text-[9px] px-1 rounded bg-amber-400/20 text-amber-300">

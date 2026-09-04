@@ -140,10 +140,10 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="text-slate-400 text-[11px]">Propriétaire :</span>
               <div
-                className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] shrink-0"
+                className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black text-white shrink-0 shadow-xs"
                 style={{ backgroundColor: owner?.color }}
               >
-                {owner?.token}
+                {owner?.name.charAt(0).toUpperCase()}
               </div>
               <span className="font-bold text-white truncate max-w-[100px]">
                 {owner?.name}

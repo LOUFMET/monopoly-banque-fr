@@ -27,8 +27,8 @@ interface GameContextType {
   addToast: (toast: Omit<ToastNotification, 'id'>) => void;
 
   // Actions de jeu
-  createGame: (hostName: string, token: string, color: string, startingCash: number) => string;
-  joinGame: (roomCode: string, playerName: string, token: string, color: string) => Promise<boolean>;
+  createGame: (hostName: string, color: string, startingCash: number, token?: string) => string;
+  joinGame: (roomCode: string, playerName: string, color: string, token?: string) => Promise<boolean>;
   switchPlayer: (playerId: string) => void;
   leaveGame: () => void;
 
@@ -175,9 +175,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Create new game
   const createGame = useCallback((
     hostName: string,
-    token: string,
     color: string,
-    startingCash: number
+    startingCash: number,
+    token?: string
   ): string => {
     const roomCode = generateRoomCode();
     const hostPlayerId = 'p_' + Math.random().toString(36).substring(2, 8);
@@ -185,7 +185,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const hostPlayer: Player = {
       id: hostPlayerId,
       name: hostName.trim() || 'Banquier',
-      token,
+      token: token || '',
       color,
       balance: startingCash,
       isBanker: true,
@@ -245,8 +245,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const joinGame = useCallback(async (
     roomCodeInput: string,
     playerName: string,
-    token: string,
-    color: string
+    color: string,
+    token?: string
   ): Promise<boolean> => {
     const code = roomCodeInput.trim().toUpperCase();
     let existing = storageService.loadSession(code);
@@ -288,7 +288,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const newPlayer: Player = {
         id: newPlayerId,
         name: playerName.trim() || `Joueur ${existing.players.length + 1}`,
-        token,
+        token: token || '',
         color,
         balance: existing.startingCash,
         isBanker: false,
