@@ -108,12 +108,37 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const unsubscribe = syncService.subscribe((message: SyncMessage) => {
       if (message.type === 'SESSION_SYNC' && message.session) {
-        // Only update if newer or different
         setSession((current) => {
-          if (!current || message.session.version >= current.version) {
-            return message.session;
+          if (!current) return message.session;
+          if ((message.session.version || 0) < (current.version || 0)) {
+            return current;
           }
-          return current;
+
+          let incomingSession = message.session;
+
+          // Garde-fou Anti-Éjection :
+          // Si ce terminal jouait sous une identité (currentPlayerId), s'assurer qu'elle n'est pas effacée par un paquet concurrent
+          if (currentPlayerId && current.players.some((p) => p.id === currentPlayerId)) {
+            const isStillPresent = incomingSession.players.some((p) => p.id === currentPlayerId);
+            if (!isStillPresent) {
+              const myPlayer = current.players.find((p) => p.id === currentPlayerId)!;
+              console.warn(
+                `[Anti-Éjection] Joueur ${myPlayer.name} (${myPlayer.id}) manquant dans la mise à jour réseau reçue. Restauration automatique.`
+              );
+              incomingSession = {
+                ...incomingSession,
+                players: [...incomingSession.players, myPlayer],
+                version: Math.max(incomingSession.version || 0, current.version || 0) + 1,
+                updatedAt: Date.now(),
+              };
+              storageService.saveSession(incomingSession);
+              // Re-diffuser immédiatement pour informer le serveur et réparer les autres clients
+              syncService.broadcastSession(incomingSession);
+            }
+          }
+
+          storageService.saveSession(incomingSession);
+          return incomingSession;
         });
       } else if (message.type === 'TRANSACTION_NOTIFY' && message.transaction) {
         // Notification for transactions involving current player
@@ -135,27 +160,48 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [session?.roomCode, currentPlayerId, addToast]);
 
-  // Try to load saved game on startup
+  // Try to load saved game on startup (avec vérification de la version serveur pour ne jamais écraser avec du vieux cache)
   useEffect(() => {
     const lastRoom = storageService.getLastRoomCode();
     if (lastRoom) {
       const savedSession = storageService.loadSession(lastRoom);
+      const savedPlayerId = storageService.getCurrentPlayerId(lastRoom);
+
       if (savedSession) {
         setSession(savedSession);
-        const savedPlayerId = storageService.getCurrentPlayerId(lastRoom);
         if (savedPlayerId && savedSession.players.some((p) => p.id === savedPlayerId)) {
           setCurrentPlayerId(savedPlayerId);
         } else if (savedSession.players.length > 0) {
           setCurrentPlayerId(savedSession.players[0].id);
         }
-
-        // Resynchroniser avec le serveur au réveil (en cas de mise en veille Render)
-        fetch('/api/session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ session: savedSession }),
-        }).catch(() => {});
       }
+
+      // Récupérer la version du serveur pour s'aligner sur la source de vérité
+      fetch(`/api/session/${lastRoom}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && data.success && data.session) {
+            const serverSession: GameSession = data.session;
+            setSession((current) => {
+              if (!current || (serverSession.version || 0) >= (current.version || 0)) {
+                storageService.saveSession(serverSession);
+                if (savedPlayerId && serverSession.players.some((p) => p.id === savedPlayerId)) {
+                  setCurrentPlayerId(savedPlayerId);
+                }
+                return serverSession;
+              }
+              return current;
+            });
+          } else if (savedSession) {
+            // Le serveur est vide (ex: redémarrage serveur), restaurer uniquement si absent
+            fetch('/api/session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ session: savedSession }),
+            }).catch(() => {});
+          }
+        })
+        .catch(() => {});
     }
   }, []);
 
@@ -241,7 +287,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return roomCode;
   }, [addToast, updateSessionAndBroadcast]);
 
-  // Join existing game
+  // Join existing game (adhésion atomique serveur)
   const joinGame = useCallback(async (
     roomCodeInput: string,
     playerName: string,
@@ -249,36 +295,79 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     token?: string
   ): Promise<boolean> => {
     const code = roomCodeInput.trim().toUpperCase();
-    let existing = storageService.loadSession(code);
+    const cleanName = playerName.trim();
+    const existingPlayerId = storageService.getCurrentPlayerId(code);
 
-    // Si non présent dans le stockage local du téléphone, interroger le serveur
-    if (!existing) {
-      try {
-        const res = await fetch(`/api/session/${code}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.success && data.session) {
-            existing = data.session;
-          }
+    try {
+      // 1. Priorité absolue : Adhésion atomique sur le serveur
+      const res = await fetch(`/api/session/${code}/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playerName: cleanName,
+          color,
+          token: token || '',
+          existingPlayerId,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.success && data.session && data.player) {
+          const updatedSession: GameSession = data.session;
+          const assignedPlayer: Player = data.player;
+
+          setSession(updatedSession);
+          setCurrentPlayerId(assignedPlayer.id);
+          storageService.saveSession(updatedSession);
+          storageService.saveCurrentPlayerId(code, assignedPlayer.id);
+
+          syncService.init(code);
+
+          playSound('fanfare');
+          triggerHaptic('success');
+          addToast({
+            type: 'success',
+            title: data.isNew ? 'Bienvenue sur le plateau !' : 'Bon retour en jeu !',
+            message: data.isNew
+              ? `Vous avez rejoint le salon ${code} avec ${updatedSession.startingCash} € de départ.`
+              : `Vous êtes reconnecté en tant que ${assignedPlayer.name}.`,
+          });
+
+          return true;
         }
-      } catch (err) {
-        console.warn('[joinGame] Erreur interrogation serveur:', err);
+      } else if (res.status === 404) {
+        addToast({
+          type: 'error',
+          title: 'Salon introuvable',
+          message: `Le code ${code} n'a pas été trouvé. Vérifiez le code fourni par l'hôte.`,
+        });
+        return false;
       }
+    } catch (err) {
+      console.warn('[joinGame] Serveur distant injoignable, passage en repli local:', err);
     }
 
+    // 2. Repli local (offline / dev sans backend)
+    let existing = storageService.loadSession(code);
     if (!existing) {
       addToast({
         type: 'error',
         title: 'Salon introuvable',
-        message: `Le code ${code} n'a pas été trouvé. Vérifiez le code fourni par l'hôte.`,
+        message: `Impossible de contacter le salon ${code}. Vérifiez votre connexion.`,
       });
       return false;
     }
 
-    // Check if player with same name exists or create new
-    let existingPlayer = existing.players.find(
-      (p) => p.name.toLowerCase() === playerName.trim().toLowerCase()
-    );
+    let existingPlayer = existingPlayerId
+      ? existing.players.find((p) => p.id === existingPlayerId)
+      : null;
+
+    if (!existingPlayer && cleanName) {
+      existingPlayer = existing.players.find(
+        (p) => p.name.toLowerCase() === cleanName.toLowerCase()
+      );
+    }
 
     let updatedPlayers = [...existing.players];
     let newPlayerId = existingPlayer?.id;
@@ -287,7 +376,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       newPlayerId = 'p_' + Math.random().toString(36).substring(2, 8);
       const newPlayer: Player = {
         id: newPlayerId,
-        name: playerName.trim() || `Joueur ${existing.players.length + 1}`,
+        name: cleanName || `Joueur ${existing.players.length + 1}`,
         token: token || '',
         color,
         balance: existing.startingCash,
@@ -315,19 +404,21 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...existing,
         players: updatedPlayers,
         transactions: [joinTx, ...existing.transactions],
-        version: existing.version + 1,
+        version: (existing.version || 0) + 1,
         updatedAt: Date.now(),
       };
 
+      setSession(updatedSession);
+      setCurrentPlayerId(newPlayerId!);
+      storageService.saveSession(updatedSession);
+      storageService.saveCurrentPlayerId(code, newPlayerId!);
       syncService.init(code);
       updateSessionAndBroadcast(updatedSession);
     } else {
+      setCurrentPlayerId(newPlayerId!);
+      storageService.saveCurrentPlayerId(code, newPlayerId!);
       syncService.init(code);
-      updateSessionAndBroadcast(existing);
     }
-
-    setCurrentPlayerId(newPlayerId!);
-    storageService.saveCurrentPlayerId(code, newPlayerId!);
 
     playSound('fanfare');
     triggerHaptic('success');

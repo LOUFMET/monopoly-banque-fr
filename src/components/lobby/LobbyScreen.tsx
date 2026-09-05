@@ -92,7 +92,7 @@ export const LobbyScreen: React.FC = () => {
 
               <button
                 onClick={() => {
-                  setName('Joueur');
+                  setName('');
                   setMode('JOIN');
                 }}
                 className="w-full group flex items-center justify-between p-4 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-white font-bold border border-slate-700/80 active:scale-[0.98] transition-all"

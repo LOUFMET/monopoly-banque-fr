@@ -19,12 +19,19 @@ class SyncService {
 
   public init(roomCode: string): void {
     const formattedCode = roomCode.toUpperCase();
-    if (this.currentRoomCode === formattedCode && this.socket && this.socket.readyState === WebSocket.OPEN) {
+    // Si déjà connecté ou en cours de connexion sur le même salon, ne rien casser
+    if (
+      this.currentRoomCode === formattedCode &&
+      this.socket &&
+      (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)
+    ) {
       return;
     }
 
-    this.destroy();
+    const previousPending = this.pendingSession;
+    this.destroy(true); // Ne pas jeter la pendingSession
     this.currentRoomCode = formattedCode;
+    this.pendingSession = previousPending;
 
     // 1. BroadcastChannel for fast local same-device / multi-tabs sync
     try {
@@ -192,7 +199,7 @@ class SyncService {
     }
   }
 
-  public destroy(): void {
+  public destroy(keepPending: boolean = false): void {
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
@@ -206,9 +213,11 @@ class SyncService {
       this.channel = null;
     }
     window.removeEventListener('storage', this.handleStorageEvent);
-    this.callbacks.clear();
+    if (!keepPending) {
+      this.callbacks.clear();
+      this.pendingSession = null;
+    }
     this.currentRoomCode = null;
-    this.pendingSession = null;
   }
 
   public getClientId(): string {
